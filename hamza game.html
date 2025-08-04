@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BCA Quiz Game - Hamza Jamal</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      width: 90%;
+      max-width: 750px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+    #score, #timer, #question-number {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+    .option {
+      background: #ffffffcc;
+      color: #000;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      position: relative;
+    }
+    .option:hover {
+      background: #eee;
+    }
+    .correct-answer { background-color: #a5d6a7 !important; }
+    .wrong-answer { background-color: #ef9a9a !important; }
+    .feedback-label {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-weight: bold;
+    }
+    #leaderboard {
+      background: #333;
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 8px;
+    }
+    #leaderboard h4 {
+      margin-top: 0;
+    }
+    #leaderboard ol {
+      padding-left: 20px;
+      text-align: left;
+    }
+  
+    .styled-btn {
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.4s ease;
+      margin: 5px;
+    }
+    .styled-btn:hover {
+      background: linear-gradient(to right, #0072ff, #00c6ff);
+      transform: scale(1.05);
+    }
+    </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BCA Quiz Game</h1>
+    <h3>By Hamza Jamal | Jamia Hamdard University</h3>
+    <div id="quiz-container">
+      <div id="score">Score: 0</div>
+      <div id="question-number"></div>
+      <div id="timer"></div>
+      <div id="question-box"></div>
+      <div id="options-box"></div>
+      <button id="next-btn" class="styled-btn">Next Question</button>
+    <div id="name-prompt" style="display:none; margin-top:20px;">
+      <input type="text" id="player-name" placeholder="Enter your name" style="padding:8px; border-radius:8px; width:60%;">
+      <button onclick="saveScore()" class="styled-btn">Submit Score</button>
+    </div>
+    </div>
+    <div id="leaderboard">
+      <h4>🏆 Leaderboard</h4>
+      <ol id="leaderboard-list">
+        <li>Hamza - 48</li>
+        <li>Ayesha - 45</li>
+        <li>Sameer - 42</li>
+        <li>Zoya - 40</li>
+        <li>Adil - 39</li>
+      </ol>
+    <div style="margin-top:20px;">
+      <button onclick="location.reload()" class="styled-btn">🔁 Play Again</button>
+    
+<div id="feedback-form" style="margin-top: 30px;">
+  <h4>💬 Leave a Feedback:</h4>
+  <textarea id="feedback-text" placeholder="Write your feedback here..." style="width: 100%; height: 80px; padding: 10px; font-size: 14px; border-radius: 8px;"></textarea>
+  <button onclick="submitFeedback()" class="styled-btn">Submit Feedback</button>
+</div>
+</div>
+    <audio id="correct-sound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+    <audio id="wrong-sound" src="https://actions.google.com/sounds/v1/cartoon/boing.ogg"></audio>
+  </div>
+
+  <script>
+    const questions = [
+  {question: "What does CPU stand for?", options: ['Central Processing Unit', 'Computer Power Unit', 'Control Panel Unit', 'Central Processor Unit'], answer: 0},
+  {question: "Which language is used for AI?", options: ['HTML', 'Python', 'CSS', 'SQL'], answer: 1},
+  {question: "What data structure uses LIFO?", options: ['Queue', 'Stack', 'Graph', 'Tree'], answer: 1},
+  {question: "What symbol is used for comments in Python?", options: ['//', '/* */', '#', '--'], answer: 2},
+  {question: "HTML is used to?", options: ['Add interactivity', 'Structure content', 'Style content', 'Manage servers'], answer: 1},
+  {question: "Which is a NoSQL DB?", options: ['MySQL', 'Oracle', 'MongoDB', 'SQLite'], answer: 2},
+  {question: "HTTP operates at which OSI layer?", options: ['Network', 'Data Link', 'Application', 'Session'], answer: 2},
+  {question: "CSS is used for?", options: ['Database', 'Styling', 'Scripting', 'Testing'], answer: 1},
+  {question: "Which is not a programming language?", options: ['HTML', 'Python', 'C++', 'Java'], answer: 0},
+  {question: "SQL stands for?", options: ['Simple Query Language', 'Structured Query Language', 'Standard Quick Logic', 'None'], answer: 1},
+  {question: "RAM is a type of?", options: ['Permanent Memory', 'Secondary Storage', 'Volatile Memory', 'None'], answer: 2},
+  {question: "Which protocol sends emails?", options: ['HTTP', 'SMTP', 'FTP', 'SNMP'], answer: 1},
+  {question: "TCP/IP is related to?", options: ['Networking', 'AI', 'Databases', 'Hardware'], answer: 0},
+  {question: "Which is a valid loop in C?", options: ['repeat', 'loop', 'for', 'until'], answer: 2},
+  {question: "What is IDE?", options: ['Internal Dev Editor', 'Integrated Development Environment', 'Interface Dev Engine', 'None'], answer: 1},
+  {question: "Which is used for backend?", options: ['CSS', 'HTML', 'Node.js', 'Photoshop'], answer: 2},
+  {question: "Which is not an OS?", options: ['Windows', 'Ubuntu', 'MacOS', 'OracleDB'], answer: 3},
+  {question: "Which is cloud provider?", options: ['AWS', 'C++', 'Postman', 'Visual Studio'], answer: 0},
+  {question: "AI full form?", options: ['Auto Intelligence', 'Artificial Intelligence', 'Advanced Internet', 'Automation Input'], answer: 1},
+  {question: "In Python, input() is used to?", options: ['Output', 'Loop', 'Take input', 'Import modules'], answer: 2},
+  {question: "Which layer routes data?", options: ['Transport', 'Network', 'Session', 'Presentation'], answer: 1},
+  {question: "Which command compiles C program?", options: ['java', 'python', 'gcc', 'cscript'], answer: 2},
+  {question: "In DBMS, primary key must be?", options: ['NULL', 'Unique', 'Duplicate', 'String'], answer: 1},
+  {question: "What is recursion?", options: ['Repeating function', 'Looping', 'Break', 'None'], answer: 0},
+  {question: "Which AI technique mimics the brain?", options: ['Expert system', 'Neural Network', 'Clustering', 'Regression'], answer: 1},
+  {question: "Which one is not a loop?", options: ['do-while', 'foreach', 'until', 'for'], answer: 2},
+  {question: "Who invented Python?", options: ['James Gosling', 'Guido van Rossum', 'Dennis Ritchie', 'Bjarne Stroustrup'], answer: 1},
+  {question: "Python file extension?", options: ['.java', '.html', '.py', '.c'], answer: 2},
+  {question: "Which is a markup language?", options: ['Python', 'Java', 'HTML', 'C++'], answer: 2},
+  {question: "Which is compiled language?", options: ['Python', 'C', 'HTML', 'CSS'], answer: 1},
+  {question: "Which operator is used for exponent in Python?", options: ['^', '**', '//', '%%'], answer: 1},
+  {question: "Which is not a type of database?", options: ['Relational', 'Hierarchical', 'Modular', 'NoSQL'], answer: 2},
+  {question: "Which is not a Python lib?", options: ['numpy', 'pandas', 'csharp', 'matplotlib'], answer: 2},
+  {question: "Which function reads input in C?", options: ['printf', 'cin', 'scanf', 'cout'], answer: 2},
+  {question: "Binary of 5?", options: ['0101', '1010', '1100', '0011'], answer: 0},
+  {question: "Which symbol is used for pointers in C?", options: ['*', '&', '^', '#'], answer: 0},
+  {question: "Which is a front-end framework?", options: ['React', 'Django', 'Flask', 'Laravel'], answer: 0},
+  {question: "Stack follows?", options: ['FIFO', 'LIFO', 'FILO', 'LILO'], answer: 1},
+  {question: "Which keyword is used for function in Python?", options: ['function', 'fun', 'def', 'define'], answer: 2},
+  {question: "Which is not a search algorithm?", options: ['DFS', 'BFS', 'Sort', 'Binary'], answer: 2},
+  {question: "Which is used to visualize data in Python?", options: ['numpy', 'tkinter', 'matplotlib', 'json'], answer: 2},
+  {question: "Which is a compiled language?", options: ['Python', 'Java', 'HTML', 'CSS'], answer: 1},
+  {question: "What is the size of int in C?", options: ['4 bytes', '2 bytes', '8 bytes', 'Depends'], answer: 3},
+  {question: "Which is used for styling?", options: ['HTML', 'CSS', 'Python', 'PHP'], answer: 1},
+  {question: "Which one is not Java keyword?", options: ['class', 'int', 'goto', 'implement'], answer: 3},
+  {question: "Which of these is a Python IDE?", options: ['NetBeans', 'Eclipse', 'PyCharm', 'JCreator'], answer: 2},
+  {question: "Which is used to get user input in Java?", options: ['Scanner', 'cin', 'input', 'read'], answer: 0},
+  {question: "Which is used for database connection in Java?", options: ['JDBC', 'ODBC', 'HTML', 'CSS'], answer: 0},
+  {
+    "question": "Which planet is known as the Red Planet? [1]",
+    "options": [
+      "Mars",
+      "Earth",
+      "Jupiter",
+      "Venus"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "How many continents are there on Earth? [2]",
+    "options": [
+      "7",
+      "5",
+      "6",
+      "8"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which keyword is used to inherit a class in Java? [3]",
+    "options": [
+      "extends",
+      "implements",
+      "inherits",
+      "super"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "What is the correct tag for inserting a line break? [4]",
+    "options": [
+      "<br>",
+      "<lb>",
+      "<break>",
+      "<newline>"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which is used for database connection in Java? [5]",
+    "options": [
+      "JDBC",
+      "ODBC",
+      "HTML",
+      "CSS"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which gas do plants absorb? [6]",
+    "options": [
+      "Carbon Dioxide",
+      "Oxygen",
+      "Nitrogen",
+      "Hydrogen"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "What is the capital of France? [7]",
+    "options": [
+      "Paris",
+      "London",
+      "Berlin",
+      "Madrid"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "What does HTML stand for? [8]",
+    "options": [
+      "Hyper Text Markup Language",
+      "Home Tool Markup Language",
+      "Hyperlinks and Text Markup Language",
+      "Hyper Transfer Markup Language"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which attribute specifies an image source? [9]",
+    "options": [
+      "src",
+      "href",
+      "alt",
+      "img"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "What is the correct tag for inserting a line break? [10]",
+    "options": [
+      "<br>",
+      "<lb>",
+      "<break>",
+      "<newline>"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which method is the entry point of a Java program? [11]",
+    "options": [
+      "main()",
+      "start()",
+      "run()",
+      "init()"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which Java collection does not allow duplicate elements? [12]",
+    "options": [
+      "Set",
+      "List",
+      "Map",
+      "Array"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which keyword is used to inherit a class in Java? [13]",
+    "options": [
+      "extends",
+      "implements",
+      "inherits",
+      "super"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which CSS property controls the text size? [14]",
+    "options": [
+      "font-size",
+      "text-size",
+      "size",
+      "font"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which symbol is used for class selector in CSS? [15]",
+    "options": [
+      ".",
+      "#",
+      "*",
+      "&"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which attribute specifies an image source? [16]",
+    "options": [
+      "src",
+      "href",
+      "alt",
+      "img"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which property is used to change text color? [17]",
+    "options": [
+      "color",
+      "font-color",
+      "text-color",
+      "foreground"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which CSS property controls the text size? [18]",
+    "options": [
+      "font-size",
+      "text-size",
+      "size",
+      "font"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "How do you select an element with id 'main'? [19]",
+    "options": [
+      "#main",
+      ".main",
+      "main",
+      "*main"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "How do you select an element with id 'main'? [20]",
+    "options": [
+      "#main",
+      ".main",
+      "main",
+      "*main"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which property is used to change text color? [21]",
+    "options": [
+      "color",
+      "font-color",
+      "text-color",
+      "foreground"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "What is the capital of France? [22]",
+    "options": [
+      "Paris",
+      "London",
+      "Berlin",
+      "Madrid"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "What does HTML stand for? [23]",
+    "options": [
+      "Hyper Text Markup Language",
+      "Home Tool Markup Language",
+      "Hyperlinks and Text Markup Language",
+      "Hyper Transfer Markup Language"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which attribute specifies an image source? [24]",
+    "options": [
+      "src",
+      "href",
+      "alt",
+      "img"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "What is the correct tag for inserting a line break? [25]",
+    "options": [
+      "<br>",
+      "<lb>",
+      "<break>",
+      "<newline>"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which CSS property controls the text size? [26]",
+    "options": [
+      "font-size",
+      "text-size",
+      "size",
+      "font"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which tag is used to create a hyperlink in HTML? [27]",
+    "options": [
+      "<a>",
+      "<link>",
+      "<href>",
+      "<url>"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which gas do plants absorb? [28]",
+    "options": [
+      "Carbon Dioxide",
+      "Oxygen",
+      "Nitrogen",
+      "Hydrogen"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "What is the correct tag for inserting a line break? [29]",
+    "options": [
+      "<br>",
+      "<lb>",
+      "<break>",
+      "<newline>"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which is used for database connection in Java? [30]",
+    "options": [
+      "JDBC",
+      "ODBC",
+      "HTML",
+      "CSS"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which keyword is used to inherit a class in Java? [31]",
+    "options": [
+      "extends",
+      "implements",
+      "inherits",
+      "super"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Which method is the entry point of a Java program? [32]",
+    "options": [
+      "main()",
+      "start()",
+      "run()",
+      "init()"
+    ],
+    "answer": 0
+  },
+] ;
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    const timeLimit = 20;
+
+    function startTimer() {
+      let countdown = timeLimit;
+      const timerEl = document.getElementById("timer");
+      timerEl.textContent = `Time Left: ${countdown}s`;
+      timer = setInterval(() => {
+        countdown--;
+        timerEl.textContent = `Time Left: ${countdown}s`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          disableOptions();
+        }
+      }, 1000);
+    }
+
+    function disableOptions() {
+      document.querySelectorAll(".option").forEach(opt => opt.onclick = null);
+    }
+
+    function loadQuestion() {
+      clearInterval(timer);
+      const questionBox = document.getElementById("question-box");
+      const optionsBox = document.getElementById("options-box");
+      const questionNumber = document.getElementById("question-number");
+
+      const q = questions[currentQuestion];
+      questionNumber.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+      questionBox.textContent = q.question;
+      optionsBox.innerHTML = "";
+
+      q.options.forEach((option, i) => {
+        const btn = document.createElement("div");
+        btn.textContent = option;
+        btn.classList.add("option");
+        btn.onclick = () => checkAnswer(btn, i, q.answer);
+        optionsBox.appendChild(btn);
+      });
+
+      startTimer();
+    }
+
+    function checkAnswer(element, selected, correct) {
+      clearInterval(timer);
+      const feedback = document.createElement("span");
+      feedback.classList.add("feedback-label");
+
+      const correctSound = document.getElementById("correct-sound");
+      const wrongSound = document.getElementById("wrong-sound");
+
+      if (selected === correct) {
+        element.classList.add("correct-answer");
+        feedback.textContent = "✅";
+        feedback.style.color = "green";
+        score += 10;
+        correctSound.play();
+      } else {
+        element.classList.add("wrong-answer");
+        feedback.textContent = "❌";
+        feedback.style.color = "red";
+        wrongSound.play();
+      }
+
+      element.appendChild(feedback);
+      document.getElementById("score").textContent = "Score: " + score;
+      disableOptions();
+    }
+
+    document.getElementById("next-btn").addEventListener("click", () => {
+      currentQuestion++;
+      if (currentQuestion >= questions.length) {
+        document.getElementById("name-prompt").style.display = "block";
+        return;
+      }
+      loadQuestion();
+    });
+
+    
+let scores = JSON.parse(localStorage.getItem("quiz_scores") || "[]");
+
+function updateLeaderboard() {
+  const list = document.getElementById("leaderboard-list");
+  list.innerHTML = "";
+  scores.slice(0, 5).forEach(s => {
+    const item = document.createElement("li");
+    item.textContent = s.name + " - " + s.score;
+    list.appendChild(item);
+  });
+}
+
+function saveScore() {
+  const name = document.getElementById("player-name").value.trim();
+  if (!name) return alert("Please enter your name!");
+  scores.push({ name, score });
+  scores.sort((a, b) => b.score - a.score);
+  localStorage.setItem("quiz_scores", JSON.stringify(scores));
+  updateLeaderboard();
+  document.getElementById("name-prompt").style.display = "none";
+}
+
+function submitFeedback() {
+  const feedback = document.getElementById("feedback-text").value.trim();
+  if (!feedback) return alert("Please write something before submitting!");
+  let allFeedback = JSON.parse(localStorage.getItem("quiz_feedback") || "[]");
+  allFeedback.push({ name: document.getElementById("player-name")?.value || "Anonymous", feedback });
+  localStorage.setItem("quiz_feedback", JSON.stringify(allFeedback));
+  alert("✅ Thanks for your feedback!");
+  document.getElementById("feedback-text").value = "";
+}
+
+window.onload = () => {
+  updateLeaderboard();
+      loadQuestion();
+    };
+  </script>
+</body>
+</html>
